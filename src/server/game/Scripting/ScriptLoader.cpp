@@ -17,6 +17,7 @@
 
 #include "ScriptLoader.h"
 #include "World.h"
+#include "AnticheatMgr.h"
 
 void AddSpellsScripts();
 void AddSC_SmartScripts();
@@ -26,6 +27,7 @@ void AddCommandsScripts();
 void AddWorldScripts();
 void AddEasternKingdomsScripts();
 void AddKalimdorScripts();
+void AddSC_anticheat_commandscript();
 void AddOutlandScripts();
 void AddNorthrendScripts();
 void AddEventsScripts();
@@ -47,6 +49,7 @@ void AddCustomScripts();
 // 13
 // 14
 // 15
+    sAnticheatMgr->StartScripts();
 // 16
 // 17
 // 18
@@ -93,6 +96,7 @@ void AddScripts()
     // 2
     // 3
     // 4
+    AddSC_anticheat_commandscript();
     // 5
     // 6
     // 7
