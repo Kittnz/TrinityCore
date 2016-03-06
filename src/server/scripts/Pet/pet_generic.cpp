@@ -21,9 +21,10 @@
  */
 
  /* ContentData
- npc_pet_gen_egbert             100%    Egbert run's around
- npc_pet_gen_pandaren_monk      100%    Pandaren Monk drinks and bows with you
- npc_pet_gen_mojo               100%    Mojo follows you when you kiss it
+ npc_pet_gen_egbert                 100%    Egbert run's around
+ npc_pet_gen_mr_chilly_pengu        100%    Mr Chilly & Pengu  /sexy will occasionally make him flip out
+ npc_pet_gen_pandaren_monk          100%    Pandaren Monk drinks and bows with you
+ npc_pet_gen_mojo                   100%    Mojo follows you when you kiss it
  EndContentData */
 
 #include "ScriptMgr.h"
@@ -101,6 +102,66 @@ public:
     CreatureAI* GetAI(Creature* creature) const
     {
         return new npc_pet_gen_egbertAI(creature);
+    }
+};
+
+enum MrChillyPenguMisc
+{
+    SPELL_CHILLY = 61811,
+    SPELL_SLIDE = 61174,
+    EVENT_CHILLY_SPELL_SLIDE = 1,
+    EVENT_CHILLY_SPELL_CHILLY = 2
+};
+
+class npc_pet_gen_mr_chilly_pengu : public CreatureScript
+{
+public:
+    npc_pet_gen_mr_chilly_pengu() : CreatureScript("npc_pet_gen_mr_chilly_pengu") {}
+
+    struct npc_pet_gen_mr_chilly_penguAI : public NullCreatureAI
+    {
+        npc_pet_gen_mr_chilly_penguAI(Creature* creature) : NullCreatureAI(creature)
+        {
+            if (Unit* owner = me->GetCharmerOrOwner())
+                me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+            _events.ScheduleEvent(EVENT_CHILLY_SPELL_CHILLY, Seconds(3));
+        }
+
+        void ReceiveEmote(Player* /*player*/, uint32 emote) override
+        {
+            if (emote == TEXT_EMOTE_SEXY && urand(1, 5) == 1)
+                _events.ScheduleEvent(EVENT_CHILLY_SPELL_SLIDE, 1);
+        }
+
+        void UpdateAI(uint32 diff) override
+        {
+            _events.Update(diff);
+
+            while (uint32 eventId = _events.ExecuteEvent())
+            {
+                switch (eventId)
+                {
+                case EVENT_CHILLY_SPELL_SLIDE:
+                    me->InterruptSpell(CURRENT_CHANNELED_SPELL);
+                    me->CastSpell(me, SPELL_SLIDE, false);
+                    _events.ScheduleEvent(EVENT_CHILLY_SPELL_CHILLY, Seconds(3));
+                    break;
+                case EVENT_CHILLY_SPELL_CHILLY:
+                    me->CastSpell(me, SPELL_CHILLY, false);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
+    private:
+        EventMap _events;
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_pet_gen_mr_chilly_penguAI(creature);
     }
 };
 
@@ -261,6 +322,7 @@ class npc_pet_gen_mojo : public CreatureScript
 void AddSC_generic_pet_scripts()
 {
     new npc_pet_gen_egbert();
+    new npc_pet_gen_mr_chilly_pengu();
     new npc_pet_gen_pandaren_monk();
     new npc_pet_gen_mojo();
 }
