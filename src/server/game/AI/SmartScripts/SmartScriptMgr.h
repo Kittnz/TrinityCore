@@ -553,7 +553,7 @@ enum SMART_ACTION
     SMART_ACTION_DISABLE_EVADE                      = 117,    // 0/1 (1 = disabled, 0 = enabled)
     SMART_ACTION_GO_SET_GO_STATE                    = 118,    // state
 
-    SMART_ACTION_END                                = 118
+    SMART_ACTION_END                                = 119
 };
 
 struct SmartAction
