@@ -170,6 +170,26 @@ public:
             }
         }
 
+        void MoveTheChildren()
+        {
+            std::vector<Position> MovePosPositions =
+            {
+                { -9373.521f, -67.71767f, 69.201965f, 1.117011f },
+                { -9374.94f, -62.51654f, 69.201965f, 5.201081f },
+                { -9371.013f, -71.20811f, 69.201965f, 1.937315f },
+                { -9368.419f, -66.47543f, 69.201965f, 3.141593f },
+                { -9372.376f, -65.49946f, 69.201965f, 4.206244f },
+                { -9377.477f, -67.8297f, 69.201965f, 0.296706f }
+            };
+            Trinity::Containers::RandomShuffle(MovePosPositions);
+            for (auto i = 0; i < childrenGUIDs.size(); ++ i)
+            {
+                if (Creature* children = ObjectAccessor::GetCreature(*me, childrenGUIDs.at(i)))
+                    children->GetMotionMaster()->MovePoint(1, MovePosPositions.at(i));
+            }
+            me->GetMotionMaster()->MovePoint(1, MovePosPositions.back());
+        }
+
         void UpdateAI(uint32 diff) override
         {
             _events.Update(diff);
@@ -181,6 +201,23 @@ public:
             // Start event at 7 am
             if ((localTm.tm_hour == 7 && localTm.tm_min == 0 && localTm.tm_sec == 0) && !_started )
             {
+                if (childrenGUIDs.empty())
+                {
+                    if (Creature* dana = me->FindNearestCreature(NPC_DANA, 10.0f))
+                        childrenGUIDs.push_back(dana->GetGUID());
+
+                    if (Creature* john = me->FindNearestCreature(NPC_JOHN, 10.0f))
+                        childrenGUIDs.push_back(john->GetGUID());
+
+                    if (Creature* lisa = me->FindNearestCreature(NPC_LISA, 10.0f))
+                        childrenGUIDs.push_back(lisa->GetGUID());
+
+                    if (Creature* aaron = me->FindNearestCreature(NPC_AARON, 10.0f))
+                        childrenGUIDs.push_back(aaron->GetGUID());
+
+                    if (Creature* jose = me->FindNearestCreature(NPC_JOSE, 10.0f))
+                        childrenGUIDs.push_back(jose->GetGUID());
+                }
                 me->GetMotionMaster()->MovePath(STORMWIND_PATH, false);
                 _started = true;
             }
@@ -239,6 +276,7 @@ public:
     private:
         EventMap _events;
         bool _started;
+        GuidVector childrenGUIDs;
     };
 
     CreatureAI* GetAI(Creature* creature) const override
