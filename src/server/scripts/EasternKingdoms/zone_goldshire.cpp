@@ -150,12 +150,12 @@ public:
             {
                 if (Creature* children = ObjectAccessor::GetCreature(*me, _childrenGUIDs.at(i)))
                 {
-                    children->GetMotionMaster()->MovePoint(0, MovePosPositions.at(i));
+                    children->GetMotionMaster()->MovePoint(0, MovePosPositions.at(i), true, true);
                     me->SetHomePosition(MovePosPositions.at(i));
                 }
             }
 
-            me->GetMotionMaster()->MovePoint(0, MovePosPositions.back());
+            me->GetMotionMaster()->MovePoint(0, MovePosPositions.back(), true, true);
             me->SetHomePosition(MovePosPositions.back());
         }
 
@@ -250,6 +250,11 @@ public:
                         ///! otherwise she will run away when she enters the house
                         ///! you also need to think about next day, she runs away and rest of the kids stay near cameron
                         ///! cameron will do a grid search to find all 5 childs but Lisa will be too far away
+                        ///! this is how you break formation
+                        /*
+                        if (lisa->GetFormation())
+                            lisa->GetFormation()->RemoveMember(lisa);
+                        */
                         if (Creature* lisa = me->FindNearestCreature(NPC_LISA, 25.0f))
                             lisa->GetMotionMaster()->MovePath(LISA_PATH, false);
 
