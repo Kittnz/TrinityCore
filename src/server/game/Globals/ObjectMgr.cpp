@@ -376,7 +376,9 @@ void ObjectMgr::LoadCreatureTemplates()
     //                                        62          63        64          65          66           67              68            69             70
                                              "ctm.Ground, ctm.Swim, ctm.Flight, ctm.Rooted, HoverHeight, HealthModifier, ManaModifier, ArmorModifier, DamageModifier, "
     //                                        71                  72            73          74           75                    76                        77           78
-                                             "ExperienceModifier, RacialLeader, movementId, RegenHealth, mechanic_immune_mask, spell_school_immune_mask, flags_extra, ScriptName "
+                                             "ExperienceModifier, RacialLeader, movementId, RegenHealth, mechanic_immune_mask, spell_school_immune_mask, flags_extra, ScriptName, "
+    //                                        79
+                                             "patch"
                                              "FROM creature_template ct LEFT JOIN creature_template_movement ctm ON ct.entry = ctm.CreatureId");
 
     if (!result)
@@ -389,7 +391,14 @@ void ObjectMgr::LoadCreatureTemplates()
     do
     {
         Field* fields = result->Fetch();
-        LoadCreatureTemplate(fields);
+
+        // patch level
+        uint8 patch = fields[79].GetUInt8();
+
+        // Check if creature should be loaded due patch version
+        if (patch <= sWorld->GetWowPatch())
+            LoadCreatureTemplate(fields);
+
     } while (result->NextRow());
 
     // Checking needs to be done after loading because of the difficulty self referencing
@@ -1793,8 +1802,8 @@ void ObjectMgr::LoadCreatures()
     QueryResult result = WorldDatabase.Query("SELECT creature.guid, id, map, position_x, position_y, position_z, orientation, modelid, equipment_id, spawntimesecs, spawndist, "
     //   11               12         13       14            15         16         17          18          19                20                   21
         "currentwaypoint, curhealth, curmana, MovementType, spawnMask, phaseMask, eventEntry, pool_entry, creature.npcflag, creature.unit_flags, creature.dynamicflags, "
-    //   22
-        "creature.ScriptName "
+    //   22                   24                  25
+        "creature.ScriptName, creature.patch_min, creature.patch_max"
         "FROM creature "
         "LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
         "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
@@ -1821,11 +1830,26 @@ void ObjectMgr::LoadCreatures()
 
         ObjectGuid::LowType guid = fields[0].GetUInt32();
         uint32 entry        = fields[1].GetUInt32();
+        int16 patch_min     = fields[24].GetInt8();
+        int16 patch_max     = fields[25].GetInt8();
+        bool existsInPatch = true;
+
+        if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
+        {
+            TC_LOG_ERROR("sql.sql", "Table `creature` GUID %u (entry %u) has invalid values min_patch=%u, max_patch=%u.", guid, entry, patch_min, patch_max);
+            patch_min = 0;
+            patch_max = WOW_PATCH_335;
+        }
+
+        if (!((sWorld->GetWowPatch() >= patch_min) && (sWorld->GetWowPatch() <= patch_max)))
+            existsInPatch = false;
 
         CreatureTemplate const* cInfo = GetCreatureTemplate(entry);
         if (!cInfo)
         {
-            TC_LOG_ERROR("sql.sql", "Table `creature` has creature (GUID: %u) with non existing creature entry %u, skipped.", guid, entry);
+            if (existsInPatch) // don't print error when it is not loaded for the current patch
+                TC_LOG_ERROR("sql.sql", "Table `creature` has creature (GUID: %u) with non existing creature entry %u, skipped.", guid, entry);
+
             continue;
         }
 
@@ -1940,8 +1964,8 @@ void ObjectMgr::LoadCreatures()
             WorldDatabase.Execute(stmt);
         }
 
-        // Add to grid if not managed by the game event or pool system
-        if (gameEvent == 0 && PoolId == 0)
+        // Add to grid if not managed by the game event, pool system or patch version
+        if (gameEvent == 0 && PoolId == 0 && existsInPatch)
             AddCreatureToGrid(guid, &data);
     }
     while (result->NextRow());

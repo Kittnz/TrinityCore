@@ -219,8 +219,8 @@ void GameEventMgr::LoadFromDB()
 {
     {
         uint32 oldMSTime = getMSTime();
-        //                                               0           1                           2                         3          4       5        6             7            8            9
-        QueryResult result = WorldDatabase.Query("SELECT eventEntry, UNIX_TIMESTAMP(start_time), UNIX_TIMESTAMP(end_time), occurence, length, holiday, holidayStage, description, world_event, announce FROM game_event");
+        //                                               0           1                           2                         3          4       5        6             7            8            9         10         11
+        QueryResult result = WorldDatabase.Query("SELECT eventEntry, UNIX_TIMESTAMP(start_time), UNIX_TIMESTAMP(end_time), occurence, length, holiday, holidayStage, description, world_event, announce, patch_min, patch_max FROM game_event");
         if (!result)
         {
             mGameEvent.clear();
@@ -253,12 +253,30 @@ void GameEventMgr::LoadFromDB()
             pGameEvent.state        = (GameEventState)(fields[8].GetUInt8());
             pGameEvent.announce     = fields[9].GetUInt8();
             pGameEvent.nextstart    = 0;
+            uint8 patch_min         = fields[10].GetUInt8();
+            uint8 patch_max         = fields[11].GetUInt8();
+            bool disable            = true;
+
+            if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
+            {
+                TC_LOG_ERROR("sql.sql", "Table `game_event` game event id (%i) has invalid values min_patch=%u, max_patch=%u.", event_id, patch_min, patch_max);
+                patch_min = 0;
+                patch_max = WOW_PATCH_335;
+            }
+
+            if (!((sWorld->GetWowPatch() >= patch_min) && (sWorld->GetWowPatch() <= patch_max)))
+            {
+                pGameEvent.length = 0;
+                disable = false;
+            }
 
             ++count;
 
             if (pGameEvent.length == 0 && pGameEvent.state == GAMEEVENT_NORMAL)                            // length>0 is validity check
             {
-                TC_LOG_ERROR("sql.sql", "`game_event`: game event id (%i) is not a world event and has length = 0, thus cannot be used.", event_id);
+                if (disable) // don't print error when it is not loaded for the current patch
+                    TC_LOG_ERROR("sql.sql", "`game_event`: game event id (%i) is not a world event and has length = 0, thus cannot be used.", event_id);
+
                 continue;
             }
 

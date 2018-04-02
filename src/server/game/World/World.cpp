@@ -119,6 +119,7 @@ World::World()
     m_NextMonthlyQuestReset = 0;
     m_NextRandomBGReset = 0;
     m_NextGuildReset = 0;
+    m_wowPatch = WOW_PATCH_335;
 
     m_defaultDbcLocale = LOCALE_enUS;
     m_availableDbcLocaleMask = 0;
@@ -463,9 +464,11 @@ void World::LoadConfigSettings(bool reload)
     // load update time related configs
     sWorldUpdateTime.LoadFromConfig();
 
+    m_wowPatch = sConfigMgr->GetIntDefault("WowPatch", WOW_PATCH_335);
+
     ///- Read the player limit and the Message of the day from the config file
     SetPlayerAmountLimit(sConfigMgr->GetIntDefault("PlayerLimit", 100));
-    Motd::SetMotd(sConfigMgr->GetStringDefault("Motd", "Welcome to a Trinity Core Server."));
+    Motd::SetMotd(sConfigMgr->GetStringDefault("Motd", "Welcome to a Trinity Core Server.") + std::string("\n") + std::string(GetPatchName()) + std::string(" is now live!"));
 
     ///- Read ticket system setting from the config file
     m_bool_configs[CONFIG_ALLOW_TICKETS] = sConfigMgr->GetBoolDefault("AllowTickets", true);
@@ -1481,6 +1484,63 @@ void World::LoadConfigSettings(bool reload)
     // call ScriptMgr if we're reloading the configuration
     if (reload)
         sScriptMgr->OnConfigLoad(reload);
+}
+
+/// Get Server Patch
+char* const World::GetPatchName() const
+{
+    switch (GetWowPatch())
+    {
+        // Original game aka Vanilla
+    case WOW_PATCH_120:
+        return "Patch 1.2: Mysteries of Maraudon";
+    case WOW_PATCH_130:
+        return "Patch 1.3: Ruins of the Dire Maul";
+    case WOW_PATCH_140:
+        return "Patch 1.4: The Call to War";
+    case WOW_PATCH_150:
+        return "Patch 1.5: Battlegrounds";
+    case WOW_PATCH_160:
+        return "Patch 1.6: Assault on Blackwing Lair";
+    case WOW_PATCH_170:
+        return "Patch 1.7: Rise of the Blood God";
+    case WOW_PATCH_180:
+        return "Patch 1.8: Dragons of Nightmare";
+    case WOW_PATCH_190:
+        return "Patch 1.9: The Gates of Ahn'Qiraj";
+    case WOW_PATCH_1100:
+        return "Patch 1.10: Storms of Azeroth";
+    case WOW_PATCH_1110:
+        return "Patch 1.11: Shadow of the Necropolis";
+    case WOW_PATCH_1120:
+        return "Patch 1.12: Drums of War";
+        // Burning Crusade
+    case WOW_PATCH_200:
+        return "Patch 2.0: Before the Storm";
+    case WOW_PATCH_210:
+        return "Patch 2.1: The Black Temple";
+    case WOW_PATCH_220:
+        return "Patch 2.2: Voice Chat";
+    case WOW_PATCH_230:
+        return "Patch 2.3: The Gods of Zul?Aman";
+    case WOW_PATCH_240:
+        return "Patch 2.4: Fury of the Sunwell";
+        // Wrath of the Lich King
+    case WOW_PATCH_300:
+        return "Patch 3.0.0: Echoes of Doom";
+    case WOW_PATCH_310:
+        return "Patch 3.1.0: Secrets of Ulduar";
+    case WOW_PATCH_320:
+        return "Patch 3.2.0: Call of the Crusade";
+    case WOW_PATCH_322:
+        return "Patch 3.2.2: Call of the Crusade"; // Release of Onyxia again
+    case WOW_PATCH_330:
+        return "Patch 3.3.0: Fall of the Lich King";
+    case WOW_PATCH_335:
+        return "Patch 3.3.5: Assault on the Ruby Sanctum";
+    }
+
+    return "Invalid Patch!";
 }
 
 /// Initialize the World
