@@ -1837,7 +1837,7 @@ void ObjectMgr::LoadCreatures()
         if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
         {
             TC_LOG_ERROR("sql.sql", "Table `creature` GUID %u (entry %u) has invalid values min_patch=%u, max_patch=%u.", guid, entry, patch_min, patch_max);
-            patch_min = 0;
+            patch_min = WOW_PATCH_120;
             patch_max = WOW_PATCH_335;
         }
 
@@ -2106,8 +2106,8 @@ void ObjectMgr::LoadGameObjects()
     QueryResult result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation, "
     //   7          8          9          10         11             12            13     14         15         16          17
         "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, "
-    //   18
-        "ScriptName "
+    //   18          19                    20
+        "ScriptName, gameobject.patch_min, gameobject.patch_max"
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
         "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
 
@@ -2132,7 +2132,19 @@ void ObjectMgr::LoadGameObjects()
         Field* fields = result->Fetch();
 
         ObjectGuid::LowType guid = fields[0].GetUInt32();
-        uint32 entry        = fields[1].GetUInt32();
+        uint32 entry             = fields[1].GetUInt32();
+        uint8 patch_min          = fields[19].GetUInt8();
+        uint8 patch_max          = fields[20].GetUInt8();
+
+        if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
+        {
+            TC_LOG_ERROR("sql.sql", "Table `gameobject` GUID %u (entry %u) has invalid values min_patch=%u, max_patch=%u.", guid, entry, patch_min, patch_max);
+            patch_min = WOW_PATCH_120;
+            patch_max = WOW_PATCH_335;
+        }
+
+        if (!((sWorld->GetWowPatch() >= patch_min) && (sWorld->GetWowPatch() <= patch_max)))
+            continue;
 
         GameObjectTemplate const* gInfo = GetGameObjectTemplate(entry);
         if (!gInfo)
@@ -7063,7 +7075,9 @@ void ObjectMgr::LoadGameObjectTemplate()
     //                                         8      9      10     11     12     13     14     15     16     17     18      19      20
                                              "Data0, Data1, Data2, Data3, Data4, Data5, Data6, Data7, Data8, Data9, Data10, Data11, Data12, "
     //                                         21      22      23      24      25      26      27      28      29      30      31      32      33
-                                             "Data13, Data14, Data15, Data16, Data17, Data18, Data19, Data20, Data21, Data22, Data23, AIName, ScriptName "
+                                             "Data13, Data14, Data15, Data16, Data17, Data18, Data19, Data20, Data21, Data22, Data23, AIName, ScriptName, "
+    //                                       34
+                                             "patch"
                                              "FROM gameobject_template");
 
     if (!result)
@@ -7078,6 +7092,11 @@ void ObjectMgr::LoadGameObjectTemplate()
         Field* fields = result->Fetch();
 
         uint32 entry = fields[0].GetUInt32();
+        uint8 patch  = fields[34].GetInt16();
+
+        // Check if creature should be loaded due patch version
+        if (patch <= sWorld->GetWowPatch())
+            continue;
 
         GameObjectTemplate& got = _gameObjectTemplateStore[entry];
         got.entry          = entry;

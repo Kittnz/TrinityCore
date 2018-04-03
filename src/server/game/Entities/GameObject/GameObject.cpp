@@ -982,6 +982,9 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     stmt->setInt32(index++, int32(m_respawnDelayTime));
     stmt->setUInt8(index++, GetGoAnimProgress());
     stmt->setUInt8(index++, uint8(GetGoState()));
+    index++; // VerifiedBuild
+    stmt->setUInt8(index++, WOW_PATCH_120);  // patch_min
+    stmt->setUInt8(index++, WOW_PATCH_335); // patch_max
     trans->Append(stmt);
 
     WorldDatabase.CommitTransaction(trans);
