@@ -4240,7 +4240,7 @@ void ObjectMgr::LoadQuests()
 
     _exclusiveQuestGroups.clear();
 
-    QueryResult result = WorldDatabase.Query("SELECT "
+    QueryResult result = WorldDatabase.PQuery("SELECT "
         //0      1           2         3           4            5                6              7             8
         "ID, QuestType, QuestLevel, MinLevel, QuestSortID, QuestInfoID, SuggestedGroupNum, TimeAllowed, AllowableRaces,"
         //      9                     10                   11                    12
