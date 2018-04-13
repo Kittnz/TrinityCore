@@ -7071,14 +7071,14 @@ void ObjectMgr::LoadGameObjectTemplate()
     uint32 oldMSTime = getMSTime();
 
     //                                                 0      1      2        3       4             5          6     7
-    QueryResult result = WorldDatabase.Query("SELECT entry, type, displayId, name, IconName, castBarCaption, unk1, size, "
+    QueryResult result = WorldDatabase.PQuery("SELECT entry, type, displayId, name, IconName, castBarCaption, unk1, size, "
     //                                         8      9      10     11     12     13     14     15     16     17     18      19      20
                                              "Data0, Data1, Data2, Data3, Data4, Data5, Data6, Data7, Data8, Data9, Data10, Data11, Data12, "
     //                                         21      22      23      24      25      26      27      28      29      30      31      32      33
                                              "Data13, Data14, Data15, Data16, Data17, Data18, Data19, Data20, Data21, Data22, Data23, AIName, ScriptName, "
     //                                       34
                                              "patch"
-                                             "FROM gameobject_template");
+                                             "FROM gameobject_template t1 WHERE patch=(SELECT max(patch) FROM gameobject_template t2 WHERE t1.gameobject_template=t2.gameobject_template && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
