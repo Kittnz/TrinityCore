@@ -362,7 +362,7 @@ void ObjectMgr::LoadCreatureTemplates()
     uint32 oldMSTime = getMSTime();
 
     //                                               0      1                   2                   3                   4            5            6         7         8
-    QueryResult result = WorldDatabase.Query("SELECT entry, difficulty_entry_1, difficulty_entry_2, difficulty_entry_3, KillCredit1, KillCredit2, modelid1, modelid2, modelid3, "
+    QueryResult result = WorldDatabase.PQuery("SELECT entry, difficulty_entry_1, difficulty_entry_2, difficulty_entry_3, KillCredit1, KillCredit2, modelid1, modelid2, modelid3, "
     //                                        9         10    11       12        13              14        15        16   17       18       19          20
                                              "modelid4, name, subname, IconName, gossip_menu_id, minlevel, maxlevel, exp, faction, npcflag, speed_walk, speed_run, "
     //                                        21     22    23         24              25               26            27             28          29          30
@@ -379,7 +379,7 @@ void ObjectMgr::LoadCreatureTemplates()
                                              "ExperienceModifier, RacialLeader, movementId, RegenHealth, mechanic_immune_mask, spell_school_immune_mask, flags_extra, ScriptName, "
     //                                        79
                                              "patch"
-                                             "FROM creature_template ct LEFT JOIN creature_template_movement ctm ON ct.entry = ctm.CreatureId");
+                                             "FROM creature_template ct LEFT JOIN creature_template_movement ctm ON ct.entry = ctm.CreatureId WHERE patch=(SELECT max(patch) FROM creature_template t2 WHERE ct.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
@@ -7078,7 +7078,7 @@ void ObjectMgr::LoadGameObjectTemplate()
                                              "Data13, Data14, Data15, Data16, Data17, Data18, Data19, Data20, Data21, Data22, Data23, AIName, ScriptName, "
     //                                       34
                                              "patch"
-                                             "FROM gameobject_template t1 WHERE patch=(SELECT max(patch) FROM gameobject_template t2 WHERE t1.gameobject_template=t2.gameobject_template && patch <= %u)", sWorld->GetWowPatch());
+                                             "FROM gameobject_template t1 WHERE patch=(SELECT max(patch) FROM gameobject_template t2 WHERE t1.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
