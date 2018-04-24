@@ -1487,7 +1487,7 @@ void World::LoadConfigSettings(bool reload)
 }
 
 /// Get Server Patch
-char* World::GetPatchName() const
+char const* World::GetPatchName()
 {
     switch (GetWowPatch())
     {
