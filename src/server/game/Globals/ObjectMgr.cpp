@@ -2573,7 +2573,8 @@ void ObjectMgr::LoadItemTemplates()
     //                                            126                 127                     128            129            130            131         132         133
                                              "GemProperties, RequiredDisenchantSkill, ArmorDamageModifier, duration, ItemLimitCategory, HolidayId, ScriptName, DisenchantID, "
     //                                           134        135            136
-                                             "FoodType, minMoneyLoot, maxMoneyLoot, flagsCustom FROM item_template");
+                                             "FoodType, minMoneyLoot, maxMoneyLoot, flagsCustom "
+                                             "FROM item_template t1 WHERE patch=(SELECT max(patch) FROM item_template t2 WHERE t1.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
