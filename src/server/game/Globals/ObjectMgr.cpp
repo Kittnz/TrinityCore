@@ -393,10 +393,10 @@ void ObjectMgr::LoadCreatureTemplates()
         Field* fields = result->Fetch();
 
         // patch level
-        uint8 patch = fields[79].GetUInt8();
+        /*uint8 patch = fields[79].GetUInt8();
 
         // Check if creature should be loaded due patch version
-        if (patch <= sWorld->GetWowPatch())
+        if (patch <= sWorld->GetWowPatch())*/
             LoadCreatureTemplate(fields);
 
     } while (result->NextRow());
@@ -1035,7 +1035,8 @@ void ObjectMgr::LoadCreatureAddons()
     uint32 oldMSTime = getMSTime();
 
     //                                                0       1       2      3       4       5      6
-    QueryResult result = WorldDatabase.Query("SELECT guid, path_id, mount, bytes1, bytes2, emote, auras FROM creature_addon");
+    QueryResult result = WorldDatabase.PQuery("SELECT guid, path_id, mount, bytes1, bytes2, emote, auras "
+    "FROM creature_addon t1 WHERE patch=(SELECT max(patch) FROM creature_addon t2 WHERE t1.guid=t2.guid && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
@@ -1238,7 +1239,8 @@ void ObjectMgr::LoadEquipmentTemplates()
     uint32 oldMSTime = getMSTime();
 
     //                                                 0         1       2       3       4
-    QueryResult result = WorldDatabase.Query("SELECT CreatureID, ID, ItemID1, ItemID2, ItemID3 FROM creature_equip_template");
+    QueryResult result = WorldDatabase.PQuery("SELECT CreatureID, ID, ItemID1, ItemID2, ItemID3 "
+    "FROM creature_equip_template t1 WHERE patch=(SELECT max(patch) FROM creature_equip_template t2 WHERE t1.CreatureID=t2.CreatureID && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {
@@ -2543,7 +2545,7 @@ void ObjectMgr::LoadItemTemplates()
     uint32 oldMSTime = getMSTime();
 
     //                                                 0      1       2               3              4        5        6       7          8         9        10        11           12
-    QueryResult result = WorldDatabase.Query("SELECT entry, class, subclass, SoundOverrideSubclass, name, displayid, Quality, Flags, FlagsExtra, BuyCount, BuyPrice, SellPrice, InventoryType, "
+    QueryResult result = WorldDatabase.PQuery("SELECT entry, class, subclass, SoundOverrideSubclass, name, displayid, Quality, Flags, FlagsExtra, BuyCount, BuyPrice, SellPrice, InventoryType, "
     //                                              13              14           15          16             17               18                19              20
                                              "AllowableClass, AllowableRace, ItemLevel, RequiredLevel, RequiredSkill, RequiredSkillRank, requiredspell, requiredhonorrank, "
     //                                              21                      22                       23               24        25          26             27           28
@@ -7093,11 +7095,11 @@ void ObjectMgr::LoadGameObjectTemplate()
         Field* fields = result->Fetch();
 
         uint32 entry = fields[0].GetUInt32();
-        uint8 patch  = fields[34].GetInt16();
+        //uint8 patch  = fields[34].GetInt16();
 
         // Check if creature should be loaded due patch version
-        if (patch <= sWorld->GetWowPatch())
-            continue;
+        /*if (patch <= sWorld->GetWowPatch())
+            continue;*/
 
         GameObjectTemplate& got = _gameObjectTemplateStore[entry];
         got.entry          = entry;

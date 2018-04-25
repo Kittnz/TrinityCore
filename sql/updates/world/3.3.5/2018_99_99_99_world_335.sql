@@ -10,6 +10,16 @@ ALTER TABLE `creature_template`
 	ADD COLUMN `patch` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0' AFTER `VerifiedBuild`,
 	DROP PRIMARY KEY,
 	ADD PRIMARY KEY (`entry`, `patch`);
+
+ALTER TABLE `creature_addon`
+	ADD COLUMN `patch` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0' AFTER `auras`,
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (`guid`, `patch`);
+
+ALTER TABLE `creature_equip_template`
+	ADD COLUMN `patch` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0' AFTER `VerifiedBuild`,
+	DROP PRIMARY KEY,
+	ADD PRIMARY KEY (`CreatureID`, `ID`, `patch`);
 	
 ALTER TABLE `gameobject`
 	ADD COLUMN `patch_min` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0' AFTER `VerifiedBuild`,
