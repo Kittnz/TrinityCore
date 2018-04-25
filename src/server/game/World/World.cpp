@@ -464,11 +464,12 @@ void World::LoadConfigSettings(bool reload)
     // load update time related configs
     sWorldUpdateTime.LoadFromConfig();
 
+    ///- Read patch number
     m_wowPatch = sConfigMgr->GetIntDefault("WowPatch", WOW_PATCH_335);
 
     ///- Read the player limit and the Message of the day from the config file
     SetPlayerAmountLimit(sConfigMgr->GetIntDefault("PlayerLimit", 100));
-    Motd::SetMotd(sConfigMgr->GetStringDefault("Motd", "Welcome to a Trinity Core Server.") + std::string("\n") + std::string(GetPatchName()) + std::string(" is now live!"));
+    Motd::SetMotd(sConfigMgr->GetStringDefault("Motd", "Welcome to a Trinity Core Server.") + std::string("@") + GetPatchName() + std::string(" is now live!"));
 
     ///- Read ticket system setting from the config file
     m_bool_configs[CONFIG_ALLOW_TICKETS] = sConfigMgr->GetBoolDefault("AllowTickets", true);
@@ -1487,7 +1488,7 @@ void World::LoadConfigSettings(bool reload)
 }
 
 /// Get Server Patch
-std::string World::GetPatchName()
+std::string const World::GetPatchName()
 {
     switch (GetWowPatch())
     {
@@ -1522,7 +1523,7 @@ std::string World::GetPatchName()
     case WOW_PATCH_220:
         return "Patch 2.2: Voice Chat";
     case WOW_PATCH_230:
-        return "Patch 2.3: The Gods of Zul?Aman";
+        return "Patch 2.3: The Gods of Zul'Aman";
     case WOW_PATCH_240:
         return "Patch 2.4: Fury of the Sunwell";
         // Wrath of the Lich King

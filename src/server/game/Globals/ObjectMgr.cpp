@@ -378,7 +378,7 @@ void ObjectMgr::LoadCreatureTemplates()
     //                                        71                  72            73          74           75                    76                        77           78
                                              "ExperienceModifier, RacialLeader, movementId, RegenHealth, mechanic_immune_mask, spell_school_immune_mask, flags_extra, ScriptName, "
     //                                        79
-                                             "patch"
+                                             "patch "
                                              "FROM creature_template ct LEFT JOIN creature_template_movement ctm ON ct.entry = ctm.CreatureId WHERE patch=(SELECT max(patch) FROM creature_template t2 WHERE ct.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
@@ -1804,8 +1804,8 @@ void ObjectMgr::LoadCreatures()
     QueryResult result = WorldDatabase.Query("SELECT creature.guid, id, map, position_x, position_y, position_z, orientation, modelid, equipment_id, spawntimesecs, spawndist, "
     //   11               12         13       14            15         16         17          18          19                20                   21
         "currentwaypoint, curhealth, curmana, MovementType, spawnMask, phaseMask, eventEntry, pool_entry, creature.npcflag, creature.unit_flags, creature.dynamicflags, "
-    //   22                   24                  25
-        "creature.ScriptName, creature.patch_min, creature.patch_max"
+    //   22                   23                  24
+        "creature.ScriptName, creature.patch_min, creature.patch_max "
         "FROM creature "
         "LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
         "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
@@ -1831,9 +1831,11 @@ void ObjectMgr::LoadCreatures()
         Field* fields = result->Fetch();
 
         ObjectGuid::LowType guid = fields[0].GetUInt32();
-        uint32 entry        = fields[1].GetUInt32();
-        int16 patch_min     = fields[24].GetInt8();
-        int16 patch_max     = fields[25].GetInt8();
+        uint32 entry             = fields[1].GetUInt32();
+
+        int16 patch_min          = fields[23].GetInt8();
+        int16 patch_max          = fields[24].GetInt8();
+
         bool existsInPatch = true;
 
         if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
@@ -2114,7 +2116,7 @@ void ObjectMgr::LoadGameObjects()
     //   7          8          9          10         11             12            13     14         15         16          17
         "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, "
     //   18          19                    20
-        "ScriptName, gameobject.patch_min, gameobject.patch_max"
+        "ScriptName, gameobject.patch_min, gameobject.patch_max "
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
         "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
 
@@ -2140,8 +2142,10 @@ void ObjectMgr::LoadGameObjects()
 
         ObjectGuid::LowType guid = fields[0].GetUInt32();
         uint32 entry             = fields[1].GetUInt32();
-        uint8 patch_min          = fields[19].GetUInt8();
-        uint8 patch_max          = fields[20].GetUInt8();
+
+        int8 patch_min          = fields[19].GetInt8();
+        int8 patch_max          = fields[20].GetInt8();
+        bool existsInPatch = true;
 
         if ((patch_min > patch_max) || (patch_max > WOW_PATCH_335))
         {
@@ -2151,12 +2155,14 @@ void ObjectMgr::LoadGameObjects()
         }
 
         if (!((sWorld->GetWowPatch() >= patch_min) && (sWorld->GetWowPatch() <= patch_max)))
-            continue;
+            existsInPatch = false;
 
         GameObjectTemplate const* gInfo = GetGameObjectTemplate(entry);
         if (!gInfo)
         {
-            TC_LOG_ERROR("sql.sql", "Table `gameobject` has gameobject (GUID: %u) with non existing gameobject entry %u, skipped.", guid, entry);
+            if (existsInPatch) // don't print error when it is not loaded for the current patch
+                TC_LOG_ERROR("sql.sql", "Table `gameobject` has gameobject (GUID: %u) with non existing gameobject entry %u, skipped.", guid, entry);
+
             continue;
         }
 
@@ -4281,8 +4287,8 @@ void ObjectMgr::LoadQuests()
         //      87               88               89               90               91               92                93                  94                  95                  96                  97                  98
         "RequiredItemId1, RequiredItemId2, RequiredItemId3, RequiredItemId4, RequiredItemId5, RequiredItemId6, RequiredItemCount1, RequiredItemCount2, RequiredItemCount3, RequiredItemCount4, RequiredItemCount5, RequiredItemCount6, "
         //  99          100             101             102             103
-        "Unknown0, ObjectiveText1, ObjectiveText2, ObjectiveText3, ObjectiveText4"
-        " FROM quest_template t1 WHERE patch=(SELECT max(patch) FROM quest_template t2 WHERE t1.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
+        "Unknown0, ObjectiveText1, ObjectiveText2, ObjectiveText3, ObjectiveText4 "
+        "FROM quest_template t1 WHERE patch=(SELECT max(patch) FROM quest_template t2 WHERE t1.ID = t2.ID && patch <= %u)", sWorld->GetWowPatch());
     if (!result)
     {
         TC_LOG_INFO("server.loading", ">> Loaded 0 quests definitions. DB table `quest_template` is empty.");
@@ -6682,7 +6688,9 @@ void ObjectMgr::LoadAreaTriggerTeleports()
     _areaTriggerStore.clear();                                  // need for reload case
 
     //                                               0        1              2                  3                  4                   5
-    QueryResult result = WorldDatabase.Query("SELECT ID,  target_map, target_position_x, target_position_y, target_position_z, target_orientation FROM areatrigger_teleport");
+    QueryResult result = WorldDatabase.PQuery("SELECT ID,  target_map, target_position_x, target_position_y, target_position_z, target_orientation "
+                                              "FROM areatrigger_teleport t1 WHERE patch=(SELECT max(patch) FROM areatrigger_teleport t2 WHERE t1.ID=t2.ID && patch <= %u)", sWorld->GetWowPatch());
+
     if (!result)
     {
         TC_LOG_INFO("server.loading", ">> Loaded 0 area trigger teleport definitions. DB table `areatrigger_teleport` is empty.");
@@ -7092,8 +7100,8 @@ void ObjectMgr::LoadGameObjectTemplate()
     //                                         21      22      23      24      25      26      27      28      29      30      31      32      33
                                              "Data13, Data14, Data15, Data16, Data17, Data18, Data19, Data20, Data21, Data22, Data23, AIName, ScriptName, "
     //                                       34
-                                             "patch"
-                                             "FROM gameobject_template t1 WHERE patch=(SELECT max(patch) FROM gameobject_template t2 WHERE t1.entry=t2.entry && patch <= %u)", sWorld->GetWowPatch());
+                                             "patch "
+                                             "FROM gameobject_template t1 WHERE patch = (SELECT max(patch) FROM gameobject_template t2 WHERE t1.entry = t2.entry && patch <= %u)", sWorld->GetWowPatch());
 
     if (!result)
     {

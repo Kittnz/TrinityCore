@@ -675,7 +675,7 @@ class TC_GAME_API World
 
         /// Get current server's WoW Patch
         uint8 GetWowPatch() const { return m_wowPatch; }
-        std::string GetPatchName();
+        std::string const GetPatchName();
 
         void SetInitialWorldSettings();
         void LoadConfigSettings(bool reload = false);
