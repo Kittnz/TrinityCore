@@ -2200,6 +2200,12 @@ void World::SetInitialWorldSettings()
 
     uint32 startupDuration = GetMSTimeDiffToNow(startupBegin);
 
+    TC_LOG_INFO("server.worldserver", "");
+    TC_LOG_INFO("server.worldserver", "==========================================================");
+    TC_LOG_INFO("server.worldserver", "Current content is set to %s.", GetPatchName());
+    TC_LOG_INFO("server.worldserver", "==========================================================");
+    TC_LOG_INFO("server.worldserver", "");
+
     TC_LOG_INFO("server.worldserver", "World initialized in %u minutes %u seconds", (startupDuration / 60000), ((startupDuration % 60000) / 1000));
 
     TC_METRIC_EVENT("events", "World initialized", "World initialized in " + std::to_string(startupDuration / 60000) + " minutes " + std::to_string((startupDuration % 60000) / 1000) + " seconds");

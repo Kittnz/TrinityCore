@@ -1513,6 +1513,8 @@ class TC_GAME_API ObjectMgr
         void LoadFactionChangeSpells();
         void LoadFactionChangeTitles();
 
+        void RestoreDeletedItems();
+
         bool IsTransportMap(uint32 mapId) const { return _transportMaps.count(mapId) != 0; }
 
     private:
